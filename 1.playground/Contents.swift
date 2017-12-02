@@ -82,4 +82,4 @@ print(solveCaptchaPart2("123425")) // 4
 print(solveCaptchaPart2("123123")) // 12
 print(solveCaptchaPart2("12131415")) // 4
 
-print(solveCaptchaPart2(problemCaptcha))
+print(solveCaptchaPart2(problemCaptcha)) // 1232
