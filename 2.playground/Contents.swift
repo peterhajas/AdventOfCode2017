@@ -29,11 +29,7 @@ extension String {
     }
 }
 
-func checksumForSpreadsheet(_ spreadsheet: String) -> Int {
-    // To determine the checksum for the spreadsheet, we need to run through
-    // each row finding the largest and smallest value. We need to diff these
-    // values to determine the row's checksum. Then we need to sum all the row's
-    // checksums
+func integerRowsForSpreadsheet(_ spreadsheet: String) -> [[Int]] {
     func intRowForStringRow(_ stringRow: String) -> [Int] {
         var intRow = [Int]()
         
@@ -51,6 +47,17 @@ func checksumForSpreadsheet(_ spreadsheet: String) -> Int {
     for row in stringRows {
         rows.append(intRowForStringRow(String(row)))
     }
+    
+    return rows
+}
+
+func checksumForSpreadsheet(_ spreadsheet: String) -> Int {
+    // To determine the checksum for the spreadsheet, we need to run through
+    // each row finding the largest and smallest value. We need to diff these
+    // values to determine the row's checksum. Then we need to sum all the row's
+    // checksums
+    
+    let rows = integerRowsForSpreadsheet(spreadsheet)
     
     // Now that we have rows of strings, calculate their checksums
     func checksumForRow(_ row: [Int]) -> Int {
@@ -80,14 +87,14 @@ func checksumForSpreadsheet(_ spreadsheet: String) -> Int {
 }
 
 // Sample
-checksumForSpreadsheet("""
+print(checksumForSpreadsheet("""
 5 1 9 5
 7 5 3
 2 4 6 8
-""") // Should be 18
+""")) // 18
 
 // Problem
-checksumForSpreadsheet("""
+let problemSpreadsheet = """
 86    440    233    83    393    420    228    491    159    13    110    135    97    238    92    396
 3646    3952    3430    145    1574    2722    3565    125    3303    843    152    1095    3805    134    3873    3024
 2150    257    237    2155    1115    150    502    255    1531    894    2309    1982    2418    206    307    2370
@@ -104,5 +111,48 @@ checksumForSpreadsheet("""
 492    1179    154    1497    819    2809    2200    2324    157    2688    1518    168    2767    2369    2583    173
 286    2076    243    939    399    451    231    2187    2295    453    1206    2468    2183    230    714    681
 3111    2857    2312    3230    149    3082    408    1148    2428    134    147    620    128    157    492    2879
-""")
+"""
+
+print(checksumForSpreadsheet(problemSpreadsheet)) // 45158
+
+func sumOfEvenlyDividingRows(_ spreadsheet: String) -> Int {
+    let rows = integerRowsForSpreadsheet(spreadsheet)
+    func evenDivisionInRow(_ row: [Int]) -> Int {
+        for i in 0..<row.count {
+            for j in 0..<row.count {
+                let value1 = row[i]
+                let value2 = row[j]
+
+                if i == j { continue }
+                
+                let doubleDivision = Double(value1) / Double(value2)
+                let intDivision = value1 / value2
+                if doubleDivision != Double(intDivision) {
+                    continue
+                }
+                else {
+                    // This is it!
+                    return intDivision
+                }
+            }
+        }
+        return 0
+    }
+    
+    var sum = 0
+    
+    for row in rows {
+        sum += evenDivisionInRow(row)
+    }
+    
+    return sum
+}
+
+print(sumOfEvenlyDividingRows("""
+5 9 2 8
+9 4 7 3
+3 8 6 5
+""")) // 9
+
+print(sumOfEvenlyDividingRows(problemSpreadsheet)) // 294
 
