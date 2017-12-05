@@ -1139,4 +1139,32 @@ let problemMaze = """
 """
 
 let problemMazeIntegers = problemMaze.components(separatedBy: CharacterSet.newlines).integers
-print(jumpsToEscapeMaze(problemMazeIntegers))
+print(jumpsToEscapeMaze(problemMazeIntegers)) // 373543
+
+// Part 2
+
+func jumpsToEscapeMazePart2(_ maze: [Int]) -> Int {
+    var position = 0
+    var mutableMaze = maze
+    var jumpCount = 0
+    while (position > -1 && position < mutableMaze.count) {
+        let jumpAmount = mutableMaze[position]
+        if mutableMaze[position] >= 3 {
+            mutableMaze[position] -= 1
+        }
+        else {
+            mutableMaze[position] += 1
+        }
+        
+        position += jumpAmount
+        jumpCount += 1
+    }
+    return jumpCount
+}
+
+// Example:
+print(jumpsToEscapeMazePart2([0,3,0,1,-3])) // 10
+
+// Problem:
+print(jumpsToEscapeMazePart2(problemMazeIntegers)) // 27502966
+
