@@ -547,3 +547,36 @@ inc mpys mzqmcwx vryz ibqrzc pmsy fat rojpxwy rcbqzi gjef
 
 print(numberOfValidPassphrasesInList(problemWords))
 
+// Part 2
+
+func passphraseIsValidPart2(_ passphrase: String) -> Bool {
+    let components = passphrase.components(separatedBy: " ")
+    var sortedComponents = [String]()
+    for component in components {
+        let sortedComponent = component.sorted()
+        sortedComponents.append(String(sortedComponent))
+    }
+    
+    return sortedComponents.count == Set(sortedComponents).count
+}
+
+func numberOfValidPassphrasesInListPart2(_ list: String) -> Int {
+    let passphrases = passphrasesInList(list)
+    var validCount = 0
+    for passphrase in passphrases {
+        if passphraseIsValidPart2(passphrase) {
+            validCount += 1
+        }
+    }
+    
+    return validCount
+}
+
+// Examples
+
+print(passphraseIsValidPart2("abc cba bca")) // false
+print(passphraseIsValidPart2("iiii oiii ooii oooi oooo")) // true
+
+// Problem
+
+print(numberOfValidPassphrasesInListPart2(problemWords))
