@@ -1352,6 +1352,87 @@ extension Node {
     var isLeaf: Bool {
         return childrenNames.count == 0
     }
+    
+    func parentNode(_ allNodes: [Node]) -> Node? {
+        if let parent = parentName {
+            return allNodes.nodeWithName(parent)
+        }
+        return nil
+    }
+    
+    func mostCommonChildWeight(_ allNodes: [Node]) -> Int {
+        var weightsToChildrenWithWeights = [Int : Int]()
+        for child in childNodes(allNodes) {
+            let childWeight = child.totalWeight(allNodes)
+            if weightsToChildrenWithWeights[childWeight] == nil {
+                weightsToChildrenWithWeights[childWeight] = 0
+            }
+            weightsToChildrenWithWeights[childWeight]! += 1
+        }
+        
+        var mostCommonWeight = 0
+        var childrenWithMostCommonWeight = 0
+        for weight in weightsToChildrenWithWeights.keys {
+            if weightsToChildrenWithWeights[weight]! > childrenWithMostCommonWeight {
+                mostCommonWeight = weight
+                childrenWithMostCommonWeight = weightsToChildrenWithWeights[weight]!
+            }
+        }
+        return mostCommonWeight
+    }
+    
+    func containsNode(_ node: Node, allNodes: [Node]) -> Bool {
+        var contains = false
+        
+        for child in childNodes(allNodes) {
+            if child == node {
+                return true
+            }
+            contains = contains || child.containsNode(node, allNodes: allNodes)
+        }
+        
+        return contains
+    }
+    
+    func imbalancedChildren(_ allNodes: [Node]) -> [Node] {
+        var imbalanced = [Node]()
+        let children = childNodes(allNodes)
+        
+        if children.count < 3 {
+            // If we have 1 or 2 children, then they all could be imbalanced
+            imbalanced.append(contentsOf: children)
+        }
+        else {
+            // Otherwise, find the one that has a weight not like the others
+            var weightsToChildrenNames = [Int : [String]]()
+            for child in children {
+                let childWeight = child.totalWeight(allNodes)
+                if !weightsToChildrenNames.keys.contains(childWeight) {
+                    weightsToChildrenNames[childWeight] = [String]()
+                }
+                weightsToChildrenNames[childWeight]!.append(child.name)
+            }
+            
+            // If all our children have the same weight, early return
+            if weightsToChildrenNames.keys.count == 1 {
+                return imbalanced
+            }
+            
+            var interestingWeight: Int = -1
+            for weightsOfChildren in weightsToChildrenNames.keys {
+                if weightsToChildrenNames[weightsOfChildren]!.count == 1 {
+                    interestingWeight = weightsOfChildren
+                    break
+                }
+            }
+            
+            let offWeightChildName = weightsToChildrenNames[interestingWeight]!.first!
+            let offWeightChild = allNodes.nodeWithName(offWeightChildName)!
+            imbalanced.append(offWeightChild)
+        }
+        
+        return imbalanced
+    }
 }
 
 extension Array where Element == Node {
@@ -1382,10 +1463,52 @@ extension Array where Element == Node {
         
         return recursiveDescriptionOfNode(root!, at: 0)
     }
-    var imbalancedNode: Node? {
-        return nil
+    var imbalancedNode: Node {
+        func recursivePotentiallyImbalancedNodes(_ from: Node) -> [Node] {
+            var imbalancedChildren = from.imbalancedChildren(self)
+            var imbalanced = [Node]()
+            imbalanced.append(contentsOf: imbalancedChildren)
+            
+            for child in imbalancedChildren {
+                imbalanced.append(contentsOf: recursivePotentiallyImbalancedNodes(child))
+            }
+            
+            return imbalanced
+        }
+        
+        let potentiallyImbalancedChildren = recursivePotentiallyImbalancedNodes(root!)
+        var imbalancedChildren = potentiallyImbalancedChildren
+        
+        // Now that we have the potentially imbalanced nodes, we should prune
+        // nodes that contain other potentially imbalanced nodes
+        
+        for i in potentiallyImbalancedChildren {
+            for j in potentiallyImbalancedChildren {
+                if i == j { continue }
+                if i.containsNode(j, allNodes: self) {
+                    if let index = imbalancedChildren.index(of: i) {
+                        imbalancedChildren.remove(at: index)
+                    }
+                }
+            }
+        }
+        
+        return imbalancedChildren.first!
+    }
+    
+    var weightForImbalancedNodeToBeBalanced: Int {
+        let imbalanced = imbalancedNode
+        if let parent = imbalanced.parentNode(self) {
+            let targetWeightWithChildren = parent.mostCommonChildWeight(self)
+            let imbalancedChildrenWeight = imbalanced.totalWeight(self) - imbalanced.weight
+            return targetWeightWithChildren - imbalancedChildrenWeight
+        }
+        return 0
     }
 }
 
-print(sampleNodes.recursiveDescription)
-print(problemNodes.recursiveDescription)
+print(sampleNodes.imbalancedNode.name) // ugml
+print(problemNodes.imbalancedNode.name) // vrgxe
+
+print(sampleNodes.weightForImbalancedNodeToBeBalanced) // 60
+print(problemNodes.weightForImbalancedNodeToBeBalanced) // 1219
