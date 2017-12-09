@@ -143,6 +143,7 @@ func instructionsFromInput(_ input: String) -> [Instruction] {
 
 struct RegisterSet {
     var backingDictionary = [String : Int]()
+    var highestValueEver = Int.min
     func valueForRegister(_ register: String) -> Int {
         if backingDictionary.keys.contains(register) {
             return backingDictionary[register]!
@@ -161,6 +162,7 @@ struct RegisterSet {
         else {
             backingDictionary[command.register]! -= command.value
         }
+        highestValueEver = max(highestValueEver, backingDictionary[command.register]!)
     }
     mutating func performInstruction(_ instruction: Instruction) {
         if instruction.condition.registerSatisfies(valueForRegister(instruction.condition.register)) {
@@ -1198,9 +1200,12 @@ var sampleRegisterSet = RegisterSet()
 
 sampleRegisterSet.performInstructions(sampleInstructions)
 print(sampleRegisterSet.largestRegisterValue) // 1
+print(sampleRegisterSet.highestValueEver) // 10
 
 let problemInstructions = instructionsFromInput(problemInput)
 var problemRegisterSet = RegisterSet()
 
 problemRegisterSet.performInstructions(problemInstructions)
 print(problemRegisterSet.largestRegisterValue) // 5102
+print(problemRegisterSet.highestValueEver) // 6056
+
