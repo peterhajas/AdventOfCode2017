@@ -31,7 +31,28 @@ extension String {
 struct Node : Hashable {
     let name: String
     let weight: Int
+    func totalWeight(_ allNodes: [Node]) -> Int {
+        var recursiveWeight = weight
+        
+        for child in childNodes(allNodes) {
+            recursiveWeight += child.totalWeight(allNodes)
+        }
+        
+        return recursiveWeight
+    }
+    
     let childrenNames: [String]
+    func childNodes(_ allNodes: [Node]) -> [Node] {
+        var childNodes = [Node]()
+        
+        for childName in childrenNames {
+            if let childNode = allNodes.nodeWithName(childName) {
+               childNodes.append(childNode)
+            }
+        }
+        
+        return childNodes
+    }
     var parentName: String? = nil
     
     static func ==(lhs: Node, rhs: Node) -> Bool {
@@ -1323,4 +1344,48 @@ let sampleNodes = nodesForInput(sampleInput)
 print(sampleNodes.root?.name) // tknk
 
 let problemNodes = nodesForInput(problemInput)
-print(problemNodes.root?.name) // mwzaxaj
+//print(problemNodes.root?.name) // mwzaxaj
+
+// Part 2
+
+extension Node {
+    var isLeaf: Bool {
+        return childrenNames.count == 0
+    }
+}
+
+extension Array where Element == Node {
+    var recursiveDescription: String {
+        func nodeDescription(_ node: Node) -> String {
+            let description = "\(node.name) - \(node.weight)"
+            if !node.isLeaf {
+                return "\(description) (\(node.totalWeight(self)))"
+            }
+            else {
+                return description
+            }
+        }
+        func recursiveDescriptionOfNode(_ node: Node, at level: Int) -> String {
+            var spacing = ""
+            for _ in 0..<level {
+                spacing = spacing + " "
+            }
+            var description = spacing + nodeDescription(node)
+            for child in node.childNodes(self) {
+                let childRecursiveDescription = recursiveDescriptionOfNode(child, at: level+1)
+                for line in childRecursiveDescription.components(separatedBy: "\n") {
+                    description += "\n " + spacing + line
+                }
+            }
+            return description
+        }
+        
+        return recursiveDescriptionOfNode(root!, at: 0)
+    }
+    var imbalancedNode: Node? {
+        return nil
+    }
+}
+
+print(sampleNodes.recursiveDescription)
+print(problemNodes.recursiveDescription)
