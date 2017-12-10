@@ -1,6 +1,6 @@
 import Cocoa
 
-func cleanStream(_ stream: String) -> String {
+func cleanStream(_ stream: String) -> (cleaned: String, noncancelledGarbage: Int) {
     var cleanedStream = stream
     
     // Trim !'s. This involves trimming them and the character next to them
@@ -12,22 +12,25 @@ func cleanStream(_ stream: String) -> String {
     
     // Trim garbage. This involves finding the next < and removing until the
     // next >
+    var noncancelledGarbageCount = 0
     while cleanedStream.contains("<") {
         let rangeOfGarbageStart = (cleanedStream as NSString).range(of: "<")
         let rangeOfGarbageEnd = (cleanedStream as NSString).range(of: ">")
         let rangeOfGarbageLength = (rangeOfGarbageEnd.location + rangeOfGarbageEnd.length) - rangeOfGarbageStart.location
         let rangeOfGarbage = NSRange(location: rangeOfGarbageStart.location, length: rangeOfGarbageLength)
         cleanedStream = (cleanedStream as NSString).replacingCharacters(in: rangeOfGarbage, with: "")
+        
+        noncancelledGarbageCount += (rangeOfGarbageLength - 2)
     }
     
     // Remove commas
     cleanedStream = cleanedStream.replacingOccurrences(of: ",", with: "")
     
-    return cleanedStream
+    return (cleanedStream, noncancelledGarbageCount)
 }
 
 func scoreForStream(_ stream: String) -> Int {
-    let cleanedStream = cleanStream(stream)
+    let cleanedStream = cleanStream(stream).cleaned
     var level = 0
     var score = 0
     for character in cleanedStream {
@@ -60,4 +63,13 @@ print(scoreForStream("{{<!!>},{<!!>},{<!!>},{<!!>}}")) // 9
 print(scoreForStream("{{<a!>},{<a!>},{<a!>},{<ab>}}")) // 3
 
 // Problem
-print(scoreForStream(problemInput))
+print(scoreForStream(problemInput)) // 16021
+
+// Part 2
+// Samples
+print(cleanStream("<>").noncancelledGarbage) // 0
+print(cleanStream("<random characters>").noncancelledGarbage) // 17
+print(cleanStream("<{o\"i!a,<{i<a>").noncancelledGarbage) // 10
+
+// Problem
+print(cleanStream(problemInput).noncancelledGarbage) / /7685
